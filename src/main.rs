@@ -1,41 +1,47 @@
 mod snake;
-#[allow(unused)]
+use std::{thread, time::Duration};
+
 use snake::*;
 
-use snake::entity::Apple;
+use snake::enums::Direction;
 
 fn main(){
-    let mut e = entities::Entities::new();
-    e.apples = vec![Apple{ pos: pos::Pos { x: 0, y: 1 } }];
-    e.map();
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    let elements = std::sync::Mutex::new(entities::Entities::new());
+    thread::scope(|scp|{
+        let move_th = scp.spawn(||{
+            loop{
+                {
+                    let mut e = elements.lock().unwrap();
+                    e.move_snake();
+                    e.map();
+                    thread::sleep(Duration::from_millis(1000));
+                }
+            }
+        });
 
+        let key_th = scp.spawn(||{
+            loop{
+                {
+                    use crossterm::event::{Event::Key, KeyCode};
+                    match crossterm::event::read().unwrap(){
+                        Key(key) => {
+                            match key.code {
+                                KeyCode::Up =>    { let mut e = elements.lock().unwrap(); e.direction = Direction::Up}
+                                KeyCode::Down =>  { let mut e = elements.lock().unwrap(); e.direction = Direction::Down}
+                                KeyCode::Left =>  { let mut e = elements.lock().unwrap(); e.direction = Direction::Left}
+                                KeyCode::Right => { let mut e = elements.lock().unwrap(); e.direction = Direction::Right}
+                                _ => {}
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
 
-    e.move_snake(enums::Direction::Down);
-    e.apples = vec![Apple{ pos: pos::Pos { x: 0, y: 2 } }];
-    e.map();
-    std::thread::sleep(std::time::Duration::from_secs(1));
+        });
 
-    
-    e.move_snake(enums::Direction::Down);
-    e.apples = vec![Apple{ pos: pos::Pos { x: 0, y: 3 } }];
-    e.map();
-    std::thread::sleep(std::time::Duration::from_secs(1));
-
-
-
-
-    e.move_snake(enums::Direction::Right);
-    e.map();
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    
-    
-    e.move_snake(enums::Direction::Right);
-    e.map();
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    
-    e.move_snake(enums::Direction::Right);
-    e.map();
-    std::thread::sleep(std::time::Duration::from_secs(1));
+        move_th.join().unwrap();
+        key_th.join().unwrap();
+    });
 
 }

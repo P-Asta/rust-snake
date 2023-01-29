@@ -1,6 +1,6 @@
 
 use super::pos::Pos;
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Snake{
     pub pos: Pos
 }
