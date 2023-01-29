@@ -14,8 +14,12 @@ fn main(){
                     let mut e = elements.lock().unwrap();
                     e.move_snake();
                     e.map();
-                    thread::sleep(Duration::from_millis(1000));
+                    if e.is_game_over{
+                        println!("GAME OVER");
+                        break;
+                    }
                 }
+                thread::sleep(Duration::from_millis(100));
             }
         });
 
@@ -26,14 +30,20 @@ fn main(){
                     match crossterm::event::read().unwrap(){
                         Key(key) => {
                             match key.code {
-                                KeyCode::Up =>    { let mut e = elements.lock().unwrap(); e.direction = Direction::Up}
-                                KeyCode::Down =>  { let mut e = elements.lock().unwrap(); e.direction = Direction::Down}
-                                KeyCode::Left =>  { let mut e = elements.lock().unwrap(); e.direction = Direction::Left}
-                                KeyCode::Right => { let mut e = elements.lock().unwrap(); e.direction = Direction::Right}
+                                KeyCode::Up =>    { let mut e = elements.lock().unwrap(); e.set_dir(Direction::Up)}
+                                KeyCode::Down =>  { let mut e = elements.lock().unwrap(); e.set_dir(Direction::Down)}
+                                KeyCode::Left =>  { let mut e = elements.lock().unwrap(); e.set_dir(Direction::Left)}
+                                KeyCode::Right => { let mut e = elements.lock().unwrap(); e.set_dir(Direction::Right)}
                                 _ => {}
                             }
                         }
                         _ => {}
+                    }
+                }
+                {
+                    let e = elements.lock().unwrap();
+                    if e.is_game_over{
+                        break;
                     }
                 }
             }
@@ -43,5 +53,9 @@ fn main(){
         move_th.join().unwrap();
         key_th.join().unwrap();
     });
-
+    for i in 0..3{
+        println!("{}초후에 제실행됩니다", 3 - i);
+        thread::sleep(Duration::from_millis(1000));
+    }
+    main();
 }
